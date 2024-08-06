@@ -1,11 +1,22 @@
+const CryptoUtil = require("./util/crypto");
+
 class Block{
-    constructor(timeStamp, data, preBlockHash, hash){
+    constructor(index, timeStamp, data, preBlockHash){
+        this.index = index;
         this.timeStamp = timeStamp;
         this.data = data;
         this.preBlockHash = preBlockHash;
-        //TODO caculate the hash sum
-        this.hash = hash;
+        this.hash = this.calculateHash()
+        this.nonce = 0;
     }
 
+    calculateHash() {
+        return CryptoUtil.hash(this.preBlockHash + this.data + this.timeStamp)
+    }
 
+    static newGenesisBlock() {
+        return new Block(0, 1508270000000, "This is Genesis block", "")
+    }
 }
+
+module.exports = Block
