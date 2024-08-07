@@ -9,7 +9,7 @@ class Proofofwork {
         let target = BigInt(1) << (256n-targetBits);
         this.block = block;
         this.target = target;
-        console.log("get target:", target.toString(16));
+        // console.log("get target:", target.toString(16));
     }
 
     prepareData(nonce) {
