@@ -5,7 +5,11 @@ const Cli = require("./cli")
 
 
 const blockchain = new Blockchain();
-const cli = new Cli();
-cli.bc = blockchain;
-cli.run();
+blockchain.ready().then(() => {
+    const cli = new Cli();
+    cli.bc = blockchain;
+    cli.run();
+});
+
+console.log("end")
 

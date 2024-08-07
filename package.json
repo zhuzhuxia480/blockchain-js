@@ -13,6 +13,7 @@
   },
   "private": true,
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "rocksdb": "^5.2.1"
   }
 }

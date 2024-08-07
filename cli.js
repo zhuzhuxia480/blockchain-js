@@ -19,9 +19,21 @@ class Cli {
         this.bc.addBlock(data);
     }
 
-    printChain() {
+    async printChain() {
         console.log("printchain :")
-        this.bc.printChain();
+        let it = this.bc.iterator();
+        while (true) {
+            let block = await it.next();
+            console.log("Pre.hash:", block.preBlockHash);
+            console.log("Data:", block.data);
+            console.log("Hash:", block.hash);
+            console.log();
+            if (block.preBlockHash.length === 0) {
+                console.log("get end block");
+                break;
+            }
+
+        }
     }
 
     run() {
