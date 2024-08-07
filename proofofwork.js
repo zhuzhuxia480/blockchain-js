@@ -23,7 +23,7 @@ class Proofofwork {
             let hashInt = BigInt('0x' + hash);
             if (hashInt < this.target) {
                 console.log("get new hash, nonce:", nonce, "hash: ", hash)
-                break
+                return [hash, nonce];
             }
         }
     }
