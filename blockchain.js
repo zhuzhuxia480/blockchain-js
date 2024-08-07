@@ -7,7 +7,7 @@ class Blockchain {
 
     addBlock(data) {
         let preBlock = this.blocks[this.blocks.length - 1]
-        let newBlock = new Block(preBlock.index + 1, new Date().getTime() / 1000, data, preBlock.hash);
+        let newBlock =  Block.newBlock(preBlock.index + 1, new Date().getTime() / 1000, data, preBlock.hash);
         this.blocks.push(newBlock)
         console.log("after add block size:", this.blocks.length);
     }
