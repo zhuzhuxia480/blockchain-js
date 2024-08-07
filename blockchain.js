@@ -11,6 +11,15 @@ class Blockchain {
         this.blocks.push(newBlock)
         console.log("after add block size:", this.blocks.length);
     }
+
+    printChain() {
+        for (const block of this.blocks) {
+            console.log("Pre.hash:", block.preBlockHash);
+            console.log("Data:", block.data);
+            console.log("Hash:", block.hash);
+            console.log();
+        }
+    }
 }
 
 module.exports = Blockchain;

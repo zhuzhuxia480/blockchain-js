@@ -5,11 +5,14 @@
   "main": "block.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node block.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/zhuzhuxia480/blockchain-js.git"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "commander": "^12.1.0"
+  }
 }
