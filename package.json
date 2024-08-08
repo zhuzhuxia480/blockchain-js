@@ -14,6 +14,7 @@
   "private": true,
   "dependencies": {
     "commander": "^12.1.0",
-    "rocksdb": "^5.2.1"
+    "rocksdb": "^5.2.1",
+    "sprintf-js": "^1.1.3"
   }
 }
