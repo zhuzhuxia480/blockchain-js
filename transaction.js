@@ -14,7 +14,7 @@ class Transaction {
     }
 
     setID() {
-        this.ID = crypto.hash(JSON.stringify(this));
+        this.id = crypto.hash(JSON.stringify(this));
     }
 }
 
@@ -27,11 +27,37 @@ function NewCoinbaseTX(to, data) {
     return new Transaction(null, [txOutput], [txInput]);
 }
 
+async function NewUTXOTransaction(from, to, amount, bc) {
+    let inputs = []
+    let outputs = []
+    const {accumulate, unspentOutputs} = await bc.findSpendableOutputs(from, amount);
+    if (accumulate < amount) {
+        console.log("ERROR :no enough funds");
+        throw new Error("ERROR :no enough funds");
+    }
+    for (const [txid, outs] of unspentOutputs) {
+        for (const out of outs) {
+            inputs.push(new TXOutput(txid), out, from);
+        }
+    }
+    outputs.push(new TXOutput(amount, to));
+    if (accumulate > amount) {
+        outputs.push(new TXOutput(accumulate - amount, from));
+    }
+    let tx = new Transaction("", inputs, outputs);
+    tx.setID();
+    return tx;
+}
+
 class TXInput {
     constructor(txid, vout, scriptSig) {
         this.txid = txid;
         this.scriptSig = scriptSig;
         this.vout = vout;
+    }
+
+    canUnlockOutputWith(unlockingData) {
+        return this.scriptSig === unlockingData;
     }
 
 }
@@ -41,6 +67,11 @@ class TXOutput {
         this.value = value;
         this.scriptSig = scriptSig;
     }
+
+    canBeUnlockedWith(unlockingData) {
+        return this.scriptSig === unlockingData;
+    }
+
 }
 
 

@@ -108,13 +108,70 @@ class Blockchain {
         console.log("after add block index:", lastBlock.index + 1);
     }
 
-    printChain() {
-        for (const block of this.blocks) {
-            console.log("Pre.hash:", block.preBlockHash);
-            console.log("Data:", block.data);
-            console.log("Hash:", block.hash);
-            console.log();
+    async findUnspentTransactions(address) {
+        let unspentTXs = []
+        let spentTXOs = new Map();
+        let it = this.iterator();
+        while (true) {
+            let block = await it.next();
+            for (const tx of block.transactions) {
+                let txID = tx.id;
+                Outputs:
+                    for (let i = 0; i < tx.vout.length; i++) {
+                        if (spentTXOs[txID] !== undefined) {
+                            for (const spendOut of spentTXOs[txID]) {
+                                if (spendOut === i) {
+                                    console.log("this output has been used")
+                                    continue Outputs
+                                }
+                            }
+                        }
+
+                        let out = tx.vout[i];
+                        if (out.canBeUnlockedWith(address)) {
+                            unspentTXs.push(tx.vout[i]);
+                        }
+                    }
+                if (tx.isCoinbase() === false) {
+                    for (const vin of tx.vin) {
+                        if (vin.canUnlockOutputWith(address)) {
+                            if (!spentTXOs.has(vin.txid)) {
+                                spentTXOs[vin.txid] = [];
+                            }
+                            spentTXOs[vin.txid].push(vin.vout);
+                        }
+                    }
+                }
+            }
+
+            if (block.preBlockHash.length === 0) {
+                break;
+            }
         }
+        return unspentTXs;
+    }
+
+    async findSpendableOutputs(address, amount) {
+        let unspentOutputs = new Map();
+        let unspentTXs = await this.findUnspentTransactions(address);
+        let accumulate = 0;
+
+        work:
+            for (const tx of unspentTXs) {
+                for (const out of tx.vout) {
+                    if (out.canBeUnlockedWith(address) && accumulate < amount) {
+                        accumulate += out.value;
+                        if (!unspentOutputs.has(tx.id)) {
+                            unspentOutputs[tx.id] = [];
+                        }
+                        unspentOutputs[tx.id].push();
+                    }
+                    if (accumulate >= amount) {
+                        break work;
+                    }
+                }
+            }
+        return {accumulate: accumulate, unspentOutputs: unspentOutputs};
     }
 
     iterator() {
