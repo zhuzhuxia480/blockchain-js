@@ -22,7 +22,7 @@ function NewCoinbaseTX(to, data) {
     if (data === "") {
         data = sprintf("Reward to '%s'", to);
     }
-    let txInput = new TXInput([], -1, data);
+    let txInput = new TXInput("", -1, data);
     let txOutput = new TXOutput(subsidy, to);
     return new Transaction(null, [txOutput], [txInput]);
 }
