@@ -75,4 +75,4 @@ class TXOutput {
 }
 
 
-module.exports = Transaction;
+module.exports = [Transaction, NewCoinbaseTX];

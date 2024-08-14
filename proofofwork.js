@@ -13,7 +13,7 @@ class Proofofwork {
     }
 
     prepareData(nonce) {
-        return this.block.preBlockHash + this.block.data + this.block.timeStamp + targetBits.toString() + nonce.toString();
+        return this.block.preBlockHash + JSON.stringify(this.block.transactions) + this.block.timeStamp + targetBits.toString() + nonce.toString();
     }
 
     run() {

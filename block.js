@@ -15,8 +15,8 @@ class Block{
         return CryptoUtil.hash(this.preBlockHash + JSON.stringify(this.transactions) + this.timeStamp)
     }
 
-    static newGenesisBlock() {
-        return this.newBlock(0, 1508270000000, "This is Genesis block", "");
+    static newGenesisBlock(coinbase) {
+        return this.newBlock(0, 1508270000000, [coinbase], "");
     }
 
     static newBlock(index, timeStamp, txs, preBlockHash) {
