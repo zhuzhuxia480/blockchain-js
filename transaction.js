@@ -3,6 +3,7 @@
 
 import crypto from "crypto";
 import {sprintf} from "sprintf-js";
+import {CryptoUtil} from "./util/crypto.js";
 
 const subsidy = 10
 
@@ -17,7 +18,7 @@ class Transaction {
     }
 
     setID() {
-        this.id = crypto.hash(JSON.stringify(this));
+        this.id = CryptoUtil.hash(JSON.stringify(this));
     }
 
     static fromJSON(obj) {
@@ -39,7 +40,10 @@ function NewCoinbaseTX(to, data) {
     }
     let txInput = new TXInput("", -1, data);
     let txOutput = new TXOutput(subsidy, to);
-    return new Transaction(null, [txInput], [txOutput]);
+
+    let tx = new Transaction(null, [txInput], [txOutput]);
+    tx.setID();
+    return tx;
 }
 
 async function NewUTXOTransaction(from, to, amount, bc) {
