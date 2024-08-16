@@ -81,9 +81,9 @@ class Blockchain {
 
         let lastBlock = JSON.parse(lastBlockData);
         let newBlock = Block.newBlock(lastBlock.index+1, new Date().getTime()/1000, txs, lastBlock.hash);
-        await DB.put(newBlock.hash, toJson(newBlock));
+        await DB.put(newBlock.hash, JSON.stringify(newBlock));
         await DB.put("l", newBlock.hash);
-        console.log(`add new block, index: ${lastBlock.index}, hash: ${lastBlock.hash}`);
+        console.log(`add new block, index: ${newBlock.index}, hash: ${lastBlock.hash}`);
     }
 
 
