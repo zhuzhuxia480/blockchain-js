@@ -32,12 +32,13 @@ class Cli {
     }
 
     async getBalance(address) {
-        let bc = Blockchain.newBlockchain(address);
+        let bc = await Blockchain.newBlockchain(address);
         let balance = 0;
         let UTXOs = await bc.findUTXO(address);
         for (const out of UTXOs) {
             balance += out.value;
         }
+        console.log(`{address} get balance: ${balance}`);
     }
 
     async printChain() {
