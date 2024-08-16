@@ -60,7 +60,7 @@ class Cli {
     }
 
     async send(from, to, amount) {
-        let bc = Blockchain.newBlockchain(from);
+        let bc = await Blockchain.newBlockchain(from);
         let tx = await NewUTXOTransaction(from, to, amount, bc);
         await bc.mineBlock([tx]);
         console.log("Success!");
