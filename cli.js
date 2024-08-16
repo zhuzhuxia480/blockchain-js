@@ -4,10 +4,10 @@
 // const [Transaction, NewCoinbaseTX, NewUTXOTransaction] = require("./transaction");
 
 import {Command} from "commander";
+
 const program = new Command();
 import Blockchain from "./blockchain.js";
-import { NewUTXOTransaction} from './transaction.js'
-
+import {NewUTXOTransaction} from './transaction.js'
 
 
 class Cli {
@@ -83,7 +83,7 @@ class Cli {
             .requiredOption("-from <from>", "sender")
             .requiredOption("-to <to>", "receiver")
             .requiredOption("-amount <amount>", "amount")
-            .action((from, to, amount) => this.send(from, to, amount));
+            .action((param) => this.send(param.From, param.To, param.Amount));
 
         program.command("printchain")
             .description("prints blockchain")
