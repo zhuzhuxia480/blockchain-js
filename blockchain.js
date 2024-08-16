@@ -94,7 +94,7 @@ class Blockchain {
         while (true) {
             let block = await it.next();
             for (const tx of block.transactions) {
-                let txID = tx.id;
+                let txID = tx. id;
                 Outputs:
                     for (let i = 0; i < tx.vout.length; i++) {
                         if (spentTXOs[txID] !== undefined) {
@@ -137,13 +137,15 @@ class Blockchain {
 
         work:
             for (const tx of unspentTXs) {
-                for (const out of tx.vout) {
+                for (let i = 0; i < tx.vout.length; i++) {
+                    let out = tx.vout[i];
                     if (out.canBeUnlockedWith(address) && accumulate < amount) {
                         accumulate += out.value;
                         if (!unspentOutputs.has(tx.id)) {
-                            unspentOutputs[tx.id] = [];
+                            unspentOutputs.set(tx.id, []);
                         }
-                        unspentOutputs[tx.id].push();
+                        unspentOutputs.get(tx.id).push(i);
+
                     }
                     if (accumulate >= amount) {
                         break work;
@@ -158,7 +160,9 @@ class Blockchain {
         let unspentTransactions = await this.findUnspentTransactions(address);
         for (const tx of unspentTransactions) {
             for (const out of tx.vout) {
-                UTXOs.push(out);
+                if (out.canBeUnlockedWith(address)) {
+                    UTXOs.push(out);
+                }
             }
         }
         return UTXOs;

@@ -56,10 +56,10 @@ async function NewUTXOTransaction(from, to, amount, bc) {
     }
     for (const [txid, outs] of unspentOutputs) {
         for (const out of outs) {
-            inputs.push(new TXOutput(txid), out, from);
+            inputs.push(new TXInput(txid, out, from));
         }
     }
-    outputs.push(new TXOutput(amount, to));
+    outputs.push(new TXOutput(Number(amount), to));
     if (accumulate > amount) {
         outputs.push(new TXOutput(accumulate - amount, from));
     }

@@ -38,7 +38,7 @@ class Cli {
         for (const out of UTXOs) {
             balance += out.value;
         }
-        console.log(`{address} get balance: ${balance}`);
+        console.log(`${address} get balance: ${balance}`);
     }
 
     async printChain() {
