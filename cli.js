@@ -76,7 +76,7 @@ class Cli {
         program.command("getbalance")
             .description("get balance")
             .requiredOption("-address <address>", "address")
-            .action((address) => this.getBalance(address));
+            .action((address) => this.getBalance(address.Address));
 
         program.command("send")
             .description("sed coins")
