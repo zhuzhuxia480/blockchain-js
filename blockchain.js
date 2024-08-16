@@ -1,24 +1,30 @@
-const Block = require("./block.js")
-const rocksdb = require("rocksdb")
-const fs = require("node:fs");
-const [Transaction, NewCoinbaseTX] = require("./transaction");
+// const Block = require("./block.js")
+// const rocksdb = require("rocksdb")
+// const fs = require("node:fs");
+// const [Transaction, NewCoinbaseTX] = require("./transaction")
 
+import rocksdb from 'rocksdb'
+import fs from 'fs'
+import {NewCoinbaseTX} from './transaction.js'
+import Block from "./block.js";
 
 const dbFile = "blockchain.db"
 
-class Blockchain {
-    constructor(tip) {
-        this.tip = tip;
-        this.db = rocksdb(dbFile);
-        this.dbIsOpen = false;
+
+let dbIsOpen = false;
+let db = rocksdb(dbFile);
+
+class DB {
+    static dbExists() {
+        return fs.existsSync(dbFile);
     }
 
-    async dbOpen() {
-        if (this.dbIsOpen) {
+    static async open() {
+        if (dbIsOpen) {
             return
         }
         await new Promise((resolve, reject) => {
-            this.db.open((err) => {
+            db.open((err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -26,16 +32,16 @@ class Blockchain {
                 }
             });
         });
-        this.dbIsOpen = true;
+        dbIsOpen = true;
     }
 
-    async dbGet(key) {
-        if (this.dbIsOpen === false) {
-            await this.dbOpen();
+    static async get(key) {
+        if (dbIsOpen === false) {
+            await DB.open();
         }
 
         return await new Promise((resolve, reject) => {
-            this.db.get(key, (err, data) => {
+            db.get(key, (err, data) => {
                 if (err) {
                     reject(err)
                 } else {
@@ -45,13 +51,13 @@ class Blockchain {
         });
     }
 
-    async dbPut(key, value) {
-        if (this.dbIsOpen === false) {
-            await this.dbOpen();
+    static async put(key, value) {
+        if (dbIsOpen === false) {
+            await DB.open();
         }
 
         await new Promise((resolve, reject) => {
-            this.db.put(key, value, (err) => {
+            db.put(key, value, (err) => {
                 if (err)
                     reject(err);
                 else {
@@ -60,102 +66,23 @@ class Blockchain {
             });
         });
     }
+}
 
-    async ready() {
-        await new Promise((resolve, reject) => {
-            this.db.open((err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-        let lastHash;
-        try {
-            lastHash = await new Promise((resolve, reject) => {
-                this.db.get("l", (err, data) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(data);
-                    }
-                });
-            });
-        } catch (e) {
-            //初始化创建
-            if (e.message === "NotFound: ") {
-                console.log("no block in chain, create first");
-                let block = Block.newGenesisBlock();
-                await new Promise((resolve, reject) => {
-                    this.db.put(block.hash, JSON.stringify(block), (err) => {
-                        if (err)
-                            reject(err);
-                        else {
-                            resolve();
-                        }
-                    });
-                });
 
-                await new Promise((resolve, reject) => {
-                    this.db.put("l", block.hash, (err) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            this.tip = block.hash;
-                            resolve();
-                        }
-                    });
-                });
-                this.tip = block.hash;
-            }
-        }
-        this.tip = lastHash.toString();
+class Blockchain {
+    constructor(tip) {
+        this.tip = tip;
     }
 
     async mineBlock(txs) {
-        let lastHash = await new Promise((resolve, reject) => {
-            this.db.get("l", (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
-            });
-        });
+        let lastHash = await DB.get("l")
 
-        let lastBlockData = await new Promise((resolve, reject) => {
-            this.db.get(lastHash, (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
-            });
-        });
+        let lastBlockData = await DB.get(lastHash);
 
         let lastBlock = JSON.parse(lastBlockData);
         let newBlock = Block.newBlock(lastBlock.index+1, new Date().getTime()/1000, txs, lastBlock.hash);
-        await new Promise((resolve, reject) => {
-            this.db.put(newBlock.hash, JSON.stringify(newBlock), (err) => {
-                if (err)
-                    reject(err);
-                else {
-                    resolve();
-                }
-            });
-        });
-
-        await new Promise((resolve, reject) => {
-            this.db.put("l", newBlock.hash, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    this.tip = newBlock.hash;
-                    resolve();
-                }
-            });
-        });
+        await DB.put(newBlock.hash, toJson(newBlock));
+        await DB.put("l", newBlock.hash);
         console.log(`add new block, index: ${lastBlock.index}, hash: ${lastBlock.hash}`);
     }
 
@@ -226,37 +153,46 @@ class Blockchain {
         return {accumulate: accumulate, unspentOutputs: unspentOutputs};
     }
 
-    dbExists() {
-        return fs.existsSync(dbFile);
+    async findUTXO(address) {
+        let UTXOs = []
+        let unspentTransactions = await this.findUnspentTransactions(address);
+        for (const tx of unspentTransactions) {
+            for (const out of tx.vout) {
+                UTXOs.push(out);
+            }
+        }
+        return UTXOs;
     }
 
-    async newBlockchain(address) {
-        if (this.dbExists() === false) {
+    static async newBlockchain(address) {
+        if (DB.dbExists() === false) {
             console.log("Db not exist");
             process.exit(1);
         }
-        let tip = await this.dbGet("l");
+        let tip = await DB.get("l");
         return new Blockchain(tip);
     }
 
-
-    async createBlockchain(address) {
-        if (this.dbExists()) {
+    static async createBlockchain(address) {
+        if (DB.dbExists()) {
             console.log("Blockchain exists");
             return;
         }
+
         //create genesis block
         let cbtx = NewCoinbaseTX(address, "");
         let genesis = Block.newGenesisBlock(cbtx);
-        await this.dbPut(genesis.hash, JSON.stringify(genesis));
-        await this.dbPut("l", genesis.hash);
+        await DB.put(genesis.hash, JSON.stringify(genesis));
+        await DB.put("l", genesis.hash);
         return new Blockchain(genesis.hash);
     }
+
 
     iterator() {
         return new BlockchainIterator(this.tip, this.db);
     }
 }
+
 
 class BlockchainIterator {
     constructor(hash, db) {
@@ -265,35 +201,14 @@ class BlockchainIterator {
     }
 
     async next() {
-        let block;
-        await new Promise((resolve, reject) => {
-            this.db.get(this.currentHash, (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    block = JSON.parse(data);
-                    resolve(block);
-                }
-            });
-        });
-
+        let block = Block.fromJson(await DB.get(this.currentHash));
         this.currentHash = block.preBlockHash;
         return block
     }
 }
 
-
-module.exports = Blockchain;
-
-// // test
-// let blockchain = new Blockchain();
-// blockchain.ready().then(() => {
-//     let it = blockchain.iterator();
-//     let block = it.next().then((block) => {
-//         console.log("get next block:", JSON.stringify(block));
-//     });
-// });
-//
+// module.exports = Blockchain;
+export default Blockchain
 
 
 

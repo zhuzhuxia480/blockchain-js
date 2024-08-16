@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto'
 
 
 class CryptoUtil {
@@ -9,4 +9,4 @@ class CryptoUtil {
     }
 }
 
-module.exports = CryptoUtil;
+export {CryptoUtil};

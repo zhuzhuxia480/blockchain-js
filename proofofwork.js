@@ -1,5 +1,7 @@
-const cryptoUtils = require('./util/crypto');
-const Blockchain = require('./blockchain');
+// const cryptoUtils = require('./util/crypto');
+// const Blockchain = require('./blockchain.js');
+
+import {CryptoUtil} from "./util/crypto.js";
 
 const targetBits = 16n
 const maxNonce = Number.MAX_VALUE
@@ -19,7 +21,7 @@ class Proofofwork {
     run() {
         for (let nonce = 0; nonce < maxNonce; nonce++) {
             let data = this.prepareData(nonce);
-            let hash = cryptoUtils.hash(data)
+            let hash = CryptoUtil.hash(data)
             let hashInt = BigInt('0x' + hash);
             if (hashInt < this.target) {
                 console.log("get new hash, nonce:", nonce, "hash: ", hash)
@@ -30,4 +32,4 @@ class Proofofwork {
 }
 
 
-module.exports = Proofofwork;
+export default Proofofwork;

@@ -1,5 +1,10 @@
-const CryptoUtil = require("./util/crypto");
-const Proofofwork = require("./proofofwork")
+// const CryptoUtil = require("./util/crypto");
+// const Proofofwork = require("./proofofwork")
+
+import Proofofwork from './proofofwork.js'
+import {CryptoUtil} from './util/crypto.js';
+import {Transaction} from "./transaction.js";
+
 
 class Block{
     constructor(index, timeStamp, txs, preBlockHash){
@@ -27,6 +32,19 @@ class Block{
         block.nonce = ret[1];
         return block;
     }
+
+    static fromJson(data) {
+        let block = new Block();
+        let obj = JSON.parse(data);
+        Object.entries(obj).forEach(([key, value]) => {
+            if (key === "transactions") {
+                block[key] = Transaction.fromJSON(value);
+            } else {
+                block[key] = value;
+            }
+        });
+        return block;
+    }
 }
 
-module.exports = Block
+export default Block

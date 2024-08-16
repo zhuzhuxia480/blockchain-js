@@ -1,11 +1,22 @@
-const {Command} = require("commander");
+// const {Command} = require("commander");
+// const program = new Command();
+// const Blockchain = require("./blockchain.js")
+// const [Transaction, NewCoinbaseTX, NewUTXOTransaction] = require("./transaction");
+
+import {Command} from "commander";
 const program = new Command();
+import Blockchain from "./blockchain.js";
+import { NewUTXOTransaction} from './transaction.js'
+
+
 
 class Cli {
     printUsage() {
         console.log("Usage:");
-        console.log("    addblock -data BLOCK_DATA -add a block with data");
+        console.log("    getbalance -address ADDRESS -get balance of address");
+        console.log("    createblockchain -address ADDRESS -create a blockchain and send genesis reward to address");
         console.log("    printchain - print all blcoks in the blockchain");
+        console.log("    send -from FROM -to TO -amount AMOUNT - send amount fo coins from FROM to TO");
     }
 
     validArgs() {
@@ -15,17 +26,28 @@ class Cli {
         }
     }
 
-    addBlock(data) {
-        this.bc.addBlock(data);
+    async createBlockchain(address) {
+        await Blockchain.createBlockchain(address);
+        console.log("Create blockchain done");
+    }
+
+    async getBalance(address) {
+        let bc = Blockchain.newBlockchain(address);
+        let balance = 0;
+        let UTXOs = await bc.findUTXO(address);
+        for (const out of UTXOs) {
+            balance += out.value;
+        }
     }
 
     async printChain() {
         console.log("printchain :")
-        let it = this.bc.iterator();
+        let bc = await Blockchain.newBlockchain("");
+        let it = bc.iterator();
         while (true) {
             let block = await it.next();
             console.log("Pre.hash:", block.preBlockHash);
-            console.log("Data:", block.data);
+            console.log("Transaction:", JSON.stringify(block.transactions));
             console.log("Hash:", block.hash);
             console.log();
             if (block.preBlockHash.length === 0) {
@@ -36,19 +58,37 @@ class Cli {
         }
     }
 
+    async send(from, to, amount) {
+        let bc = Blockchain.newBlockchain(from);
+        let tx = await NewUTXOTransaction(from, to, amount, bc);
+        await bc.mineBlock([tx]);
+        console.log("Success!");
+    }
+
     run() {
         this.validArgs();
-        program.command("addblock")
-            .description("add a new block with data")
-            .requiredOption("-data <data>", "block data")
-            .action((data) => {
-            this.addBlock(data);
-        })
+        program.command("createblockchain")
+            .description("create blockchain")
+            .requiredOption("-address <address>", "address")
+            .action((address) => this.createBlockchain(address.Address));
+
+        program.command("getbalance")
+            .description("get balance")
+            .requiredOption("-address <address>", "address")
+            .action((address) => this.getBalance(address));
+
+        program.command("send")
+            .description("sed coins")
+            .requiredOption("-from <from>", "sender")
+            .requiredOption("-to <to>", "receiver")
+            .requiredOption("-amount <amount>", "amount")
+            .action((from, to, amount) => this.send(from, to, amount));
+
         program.command("printchain")
             .description("prints blockchain")
-            .action(()=>this.printChain())
+            .action(() => this.printChain())
         program.parse(process.argv);
     }
 }
 
-module.exports = Cli
+export default Cli;

@@ -1,5 +1,8 @@
-const crypto = require("./util/crypto");
-const sprintf = require("sprintf-js").sprintf;
+// const crypto = require("./util/crypto");
+// const sprintf = require("sprintf-js").sprintf;
+
+import crypto from "crypto";
+import {sprintf} from "sprintf-js";
 
 const subsidy = 10
 
@@ -16,6 +19,18 @@ class Transaction {
     setID() {
         this.id = crypto.hash(JSON.stringify(this));
     }
+
+    static fromJSON(obj) {
+        let txs = [];
+        for (const txObj of obj) {
+            let tx = new Transaction();
+            tx.id = txObj.id;
+            tx.vout = TXOutput.fromJSON(txObj.vout);
+            tx.vin = TXInput.fromJSON(txObj.vin);
+            txs.push(tx);
+        }
+        return txs;
+    }
 }
 
 function NewCoinbaseTX(to, data) {
@@ -24,7 +39,7 @@ function NewCoinbaseTX(to, data) {
     }
     let txInput = new TXInput("", -1, data);
     let txOutput = new TXOutput(subsidy, to);
-    return new Transaction(null, [txOutput], [txInput]);
+    return new Transaction(null, [txInput], [txOutput]);
 }
 
 async function NewUTXOTransaction(from, to, amount, bc) {
@@ -60,6 +75,18 @@ class TXInput {
         return this.scriptSig === unlockingData;
     }
 
+    static fromJSON(json) {
+        let input = [];
+        for (const obj of json) {
+            let txinput = new TXInput();
+            Object.entries(obj).forEach(([key, value]) => {
+                txinput[key] = value;
+            });
+            input.push(txinput);
+        }
+        return input;
+    }
+
 }
 
 class TXOutput {
@@ -72,7 +99,18 @@ class TXOutput {
         return this.scriptSig === unlockingData;
     }
 
+    static fromJSON(json) {
+        let output = [];
+        for (const obj of json) {
+            let txout = new TXOutput();
+            Object.entries(obj).forEach(([key, value]) => {
+                txout[key] = value;
+            });
+            output.push(txout);
+        }
+        return output;
+    }
 }
 
 
-module.exports = [Transaction, NewCoinbaseTX];
+export {Transaction, NewCoinbaseTX, NewUTXOTransaction};
