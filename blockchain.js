@@ -108,7 +108,7 @@ class Blockchain {
 
                         let out = tx.vout[i];
                         if (out.canBeUnlockedWith(address)) {
-                            unspentTXs.push(tx.vout[i]);
+                            unspentTXs.push(tx);
                         }
                     }
                 if (tx.isCoinbase() === false) {
